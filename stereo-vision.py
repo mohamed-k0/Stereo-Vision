@@ -2,21 +2,22 @@ import cv2 as cv
 import numpy as np
 
 
-FX = 3979.911
-FY = 3979.911
-BASELINE = 193.001
-DOFFS = 124.343
-CX = 1244.772
-CY= 1019.507
+FX = 6338.47
+FY = 6338.47
+BASELINE = 171.548
+DOFFS = 479.489
+CX0 = 1035.675
+CX1 = 1515.164
+CY= 960.073
 
-NUM_DISPARITES = 272
+NUM_DISPARITES = 400
 BLOCK_SIZE = 19
 
 def main():
 
     # Load left and right images in Grayscale
-    left_image = cv.imread("dataset/im0/im0.png", cv.IMREAD_GRAYSCALE)
-    right_image = cv.imread("dataset/im0/im1.png", cv.IMREAD_GRAYSCALE)
+    left_image = cv.imread("dataset/img1/im0.png", cv.IMREAD_GRAYSCALE)
+    right_image = cv.imread("dataset/img1/im1.png", cv.IMREAD_GRAYSCALE)
 
     # Create Block Matching "object"
     block_matching = cv.StereoBM_create(numDisparities=NUM_DISPARITES, blockSize=BLOCK_SIZE) 
@@ -28,29 +29,32 @@ def main():
     # Convert the 16-bit fixed-point representation value to the actual disparity
     actual_disparity = disparity.astype(np.float32) / 16
 
-    # Calculate the depth of a chosen pixel (Z)
-    depth = calc_depth(actual_disparity, FX, BASELINE, DOFFS, 1500, 1000)
-    # print depth
-    print(f"Depth of selected pixel: {depth} mm")
 
-    # Define a Conversion matrix (Q)
+    # Selected Pixel
+    x = 1000
+    y = 1000
+    # Calculate the depth of a chosen pixel (Z)
+    depth = calc_depth(actual_disparity, FX, BASELINE, DOFFS, x, y)
+    # print depth
+    print(f"Depth of selected pixel: {depth:.2f} mm")
+
+    # Define a Conversion matrix (Q) that fits the conditions
     Q = np.float32([
-    [1, 0, 0, -CX],
-    [0, 1, 0, -CY],
+    [-1, 0, 0, CX0],
+    [0, -1, 0, CY],
     [0, 0, 0, FX],
     [0, 0, 1/BASELINE, DOFFS/BASELINE]])
 
     # Reproject points to 3D
     points_3d = cv.reprojectImageTo3D(actual_disparity, Q)
-
-    # Create a Mask for "Valid" disparity values ( > 0)
+    # Create a Mask for "Valid" disparity values ( > 0 )
     valid = actual_disparity > 0
     # Use boolean indexing to filter invalid disparity
     valid_points = points_3d[valid]
 
 
     # Get the left image colored as RGB
-    left_img_clr = cv.imread("dataset/im0/im0.png")
+    left_img_clr = cv.imread("dataset/img1/im0.png")
     left_img_clr = cv.cvtColor(left_img_clr, cv.COLOR_BGR2RGB)
     # Use Boolean indexing to filter disparity
     valid_colored = left_img_clr[valid]
@@ -88,7 +92,7 @@ def save_ply(filename, points, colors):
                 file.write(f"{X} {Y} {Z} {int(R)} {int(G)} {int(B)}\n")
 
             print("Polygon file created successfully.")
-    except:
+    except Exception:
         print("Couldn't create a file!")
         
 
