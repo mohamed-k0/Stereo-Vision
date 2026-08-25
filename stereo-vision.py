@@ -23,6 +23,12 @@ def main():
 
     # Convert the 16-bit fixed-point representation value to the actual disparity
     actual_disparity = disparity.astype(np.float32) / 16
+
+    # Calculate the depth (Z)
+    depth = calc_depth(actual_disparity, fx, baseline, doffs, 1500, 1000)
+    # print depth
+    print(f"Depth of selected pixel: {depth} mm")
+
     # Define a Conversion matrix (Q)
     Q = np.float32([
     [1, 0, 0, -cx],
@@ -30,9 +36,6 @@ def main():
     [0, 0, 0, fx],
     [0, 0, -1/baseline, doffs/baseline]])
 
-    # Calculate the depth (Z)
-    depth = calc_depth(actual_disparity, fx, baseline, doffs)
-    
     # Reproject points to 3D
     points_3d = cv.reprojectImageTo3D(actual_disparity, Q)
 
@@ -47,13 +50,9 @@ def main():
     # Use Boolean indexing to filter disparity
     valid_colored = left_img_clr[valid]
 
-    print(valid_points.shape)
-    print(valid_colored.shape)
-
     # Save resulting point cloud as ".ply" file (text format storing 3D geometry)
-
-    # print depth
-    print(depth, "mm")
+    save_ply(filename="point-cloud.ply",points=valid_points, colors=valid_colored)
+   
 
 
     # Normalize disparity for visualization
@@ -72,20 +71,29 @@ def main():
 
 def save_ply(filename, points, colors):
 
-    with open(filename, 'w') as file:
-        file.writelines(["ply", "format ascii 1.0",f"element vertex {len(points)}", "property float x", "property float y", "property uchar red", "property uchar green", "property uchar blue", 'end_header'])
+    try:
+        with open(filename, 'w') as file:
+            file.writelines(["ply\n", "format ascii 1.0\n",f"element vertex {len(points)}\n", "property float x\n", "property float y\n","property float z\n", "property uchar red\n", "property uchar green\n", "property uchar blue\n", 'end_header\n'])
 
-        # Combine same index of the two arrays in an array to iterate over it
-        for point, color in np.c_[points, colors]:
-            X, Y, Z = point
-            R, G, B = color
+            # Combine same index of the two arrays in an array to iterate over it
+            for point, color in zip(points, colors):
+                X, Y, Z = point
+                R, G, B = color
+
+                file.write(f"{X} {Y} {Z} {R} {G} {B}\n")
+
+            print("Polygon file created successfully.")
+    except:
+        print("Couldn't create a file!")
+        
 
 
 
-def calc_depth(disparity, fx, baseline, doffs):
+def calc_depth(disparity, fx, baseline, doffs, x, y):
     """ Z = (fx * Baseline) / (disparity + disparity offsets) 
     to account for difference in positions of principal points """
-    return (fx * baseline) / (disparity + doffs)
+    print("Selected Pixel:", (x,y))
+    return (fx * baseline) / (disparity[y, x] + doffs)
 
 
 
