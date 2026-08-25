@@ -23,24 +23,31 @@ def main():
 
     # Convert the 16-bit fixed-point representation value to the actual disparity
     actual_disparity = disparity.astype(np.float32) / 16
-    # Create a Conversion matrix (Q)
+    # Define a Conversion matrix (Q)
     Q = np.float32([
     [1, 0, 0, -cx],
     [0, 1, 0, -cy],
     [0, 0, 0, fx],
-    [0, 0, -1/baseline, 0]])
+    [0, 0, -1/baseline, doffs/baseline]])
 
     # Calculate the depth (Z)
-    x = 1500
-    y = 1000
     depth = calc_depth(actual_disparity, fx, baseline, doffs)
+    
+    # Reproject points to 3D
+    points_3d = cv.reprojectImageTo3D(actual_disparity, Q)
+
+    # Create a Mask for "Valid" disparity values ( > 0)
+    valid = actual_disparity > 0
+    # Use boolean indexing to filter invalid disparity
+    valid_points = points_3d[valid]
+
+    print(valid_points.shape)
+
     # Calculate the X, Y Coordinates relative to the principal point
     # X = (x - cx) * depth / fx
     # Y = (y - cy) * depth / fy
 
-    # print (X , Y , depth)
-
-    print("Selected Pixel:", (x, y))
+    # print depth
     print(depth, "mm")
 
 
