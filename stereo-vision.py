@@ -15,3 +15,11 @@ disparity = block_matching.compute(left_image, right_image)
 
 print(disparity.shape)
 
+# Normalize disparity for visualization
+visual_disparity = cv.normalize(disparity, None, 0, 255, cv.NORM_MINMAX)
+
+cv.imshow(visual_disparity)
+
+cv.waitKey(0)
+cv.destroyAllWindows()
+
