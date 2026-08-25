@@ -41,11 +41,16 @@ def main():
     # Use boolean indexing to filter invalid disparity
     valid_points = points_3d[valid]
 
-    print(valid_points.shape)
 
-    # Calculate the X, Y Coordinates relative to the principal point
-    # X = (x - cx) * depth / fx
-    # Y = (y - cy) * depth / fy
+    # Get the left image colored as RGB
+    left_img_clr = cv.imread("dataset/im0/im0.png", cv.COLOR_BGR2RGB)
+    # Use Boolean indexing to filter disparity
+    valid_colored = left_img_clr[valid]
+
+    print(valid_points.shape)
+    print(valid_colored.shape)
+
+    # Save resulting point cloud as ".ply" file (text format storing 3D geometry)
 
     # print depth
     print(depth, "mm")
@@ -61,17 +66,19 @@ def main():
     # Show the Disparity Map
     cv.imshow("window",visual_disparity)
 
-
-
-
-
-
-
-
     cv.waitKey(0)
     cv.destroyAllWindows()
 
 
+def save_ply(filename, points, colors):
+
+    with open(filename, 'w') as file:
+        file.writelines(["ply", "format ascii 1.0",f"element vertex {len(points)}", "property float x", "property float y", "property uchar red", "property uchar green", "property uchar blue", 'end_header'])
+
+        # Combine same index of the two arrays in an array to iterate over it
+        for point, color in np.c_[points, colors]:
+            X, Y, Z = point
+            R, G, B = color
 
 
 
