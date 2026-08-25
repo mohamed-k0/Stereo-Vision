@@ -9,7 +9,7 @@ print("Left image shape:", left_image.shape)
 print("Right image shape:", right_image.shape)
 
 # Create Block Matching "object"
-block_matching = cv.StereoBM_create(numDisparities=272, blockSize=15)
+block_matching = cv.StereoBM_create(numDisparities=272, blockSize=19) 
 
 # Calculate disparity using compute method
 disparity = block_matching.compute(left_image, right_image)
@@ -22,7 +22,10 @@ visual_disparity = cv.normalize(disparity, None, 0, 255, cv.NORM_MINMAX)
 # Convert to 8-bit unsigned integer
 visual_disparity = visual_disparity.astype(np.uint8)
 
-# Showing the Disparity Map
+# Save the Disparity Map
+cv.imwrite("disparity_map.png", visual_disparity)
+
+# Show the Disparity Map
 cv.imshow("window",visual_disparity)
 
 cv.waitKey(0)
