@@ -2,20 +2,24 @@ import cv2 as cv
 import numpy as np
 
 
-fx = 3979.911
-fy = 3979.911
-baseline = 193.001
-doffs = 124.343
-cx = 1244.772
-cy = 1019.507
+FX = 3979.911
+FY = 3979.911
+BASELINE = 193.001
+DOFFS = 124.343
+CX = 1244.772
+CY= 1019.507
+
+NUM_DISPARITES = 272
+BLOCK_SIZE = 19
 
 def main():
+
     # Load left and right images in Grayscale
     left_image = cv.imread("dataset/im0/im0.png", cv.IMREAD_GRAYSCALE)
     right_image = cv.imread("dataset/im0/im1.png", cv.IMREAD_GRAYSCALE)
 
     # Create Block Matching "object"
-    block_matching = cv.StereoBM_create(numDisparities=272, blockSize=19) 
+    block_matching = cv.StereoBM_create(numDisparities=NUM_DISPARITES, blockSize=BLOCK_SIZE) 
 
     # Calculate disparity using compute method
     disparity = block_matching.compute(left_image, right_image)
@@ -24,17 +28,17 @@ def main():
     # Convert the 16-bit fixed-point representation value to the actual disparity
     actual_disparity = disparity.astype(np.float32) / 16
 
-    # Calculate the depth (Z)
-    depth = calc_depth(actual_disparity, fx, baseline, doffs, 1500, 1000)
+    # Calculate the depth of a chosen pixel (Z)
+    depth = calc_depth(actual_disparity, FX, BASELINE, DOFFS, 1500, 1000)
     # print depth
     print(f"Depth of selected pixel: {depth} mm")
 
     # Define a Conversion matrix (Q)
     Q = np.float32([
-    [1, 0, 0, -cx],
-    [0, 1, 0, -cy],
-    [0, 0, 0, fx],
-    [0, 0, -1/baseline, doffs/baseline]])
+    [1, 0, 0, -CX],
+    [0, 1, 0, -CY],
+    [0, 0, 0, FX],
+    [0, 0, 1/BASELINE, DOFFS/BASELINE]])
 
     # Reproject points to 3D
     points_3d = cv.reprojectImageTo3D(actual_disparity, Q)
@@ -46,7 +50,8 @@ def main():
 
 
     # Get the left image colored as RGB
-    left_img_clr = cv.imread("dataset/im0/im0.png", cv.COLOR_BGR2RGB)
+    left_img_clr = cv.imread("dataset/im0/im0.png")
+    left_img_clr = cv.cvtColor(left_img_clr, cv.COLOR_BGR2RGB)
     # Use Boolean indexing to filter disparity
     valid_colored = left_img_clr[valid]
 
@@ -80,7 +85,7 @@ def save_ply(filename, points, colors):
                 X, Y, Z = point
                 R, G, B = color
 
-                file.write(f"{X} {Y} {Z} {R} {G} {B}\n")
+                file.write(f"{X} {Y} {Z} {int(R)} {int(G)} {int(B)}\n")
 
             print("Polygon file created successfully.")
     except:
@@ -89,11 +94,11 @@ def save_ply(filename, points, colors):
 
 
 
-def calc_depth(disparity, fx, baseline, doffs, x, y):
+def calc_depth(disparity, fx, Baseline, doffs, x, y):
     """ Z = (fx * Baseline) / (disparity + disparity offsets) 
     to account for difference in positions of principal points """
     print("Selected Pixel:", (x,y))
-    return (fx * baseline) / (disparity[y, x] + doffs)
+    return (fx * Baseline) / (disparity[y, x] + doffs)
 
 
 
