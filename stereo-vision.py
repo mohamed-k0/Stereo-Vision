@@ -20,21 +20,27 @@ def main():
     # Calculate disparity using compute method
     disparity = block_matching.compute(left_image, right_image)
 
-    x = 1500
-    y = 1000
 
     # Convert the 16-bit fixed-point representation value to the actual disparity
-    actual_disparity = disparity[y, x] / 16
+    actual_disparity = disparity.astype(np.float32) / 16
+    # Create a Conversion matrix (Q)
+    Q = np.float32([
+    [1, 0, 0, -cx],
+    [0, 1, 0, -cy],
+    [0, 0, 0, fx],
+    [0, 0, -1/baseline, 0]])
+
     # Calculate the depth (Z)
+    x = 1500
+    y = 1000
     depth = calc_depth(actual_disparity, fx, baseline, doffs)
     # Calculate the X, Y Coordinates relative to the principal point
-    X = (x - cx) * depth / fx
-    Y = (y - cy) * depth / fy
+    # X = (x - cx) * depth / fx
+    # Y = (y - cy) * depth / fy
 
-    print (X , Y , depth)
+    # print (X , Y , depth)
 
     print("Selected Pixel:", (x, y))
-    print(actual_disparity)
     print(depth, "mm")
 
 
