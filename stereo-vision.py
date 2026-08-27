@@ -1,5 +1,5 @@
-import os
-import re
+import os   # Import os library to be able to manipulate directories and files inside the device
+import re   # Import regular expressions library to find info inside calib.txt
 import cv2 as cv
 import numpy as np
 
@@ -79,7 +79,11 @@ def main():
     cv.waitKey(0)
     cv.destroyAllWindows()
 
-
+# Get the information of calib.txt inside a dictionary
+def read_calib(path): # -> dict
+    with open(path, 'r') as file:
+        text = file.read()
+    
 def save_ply(filename, points, colors):
 
     try:
