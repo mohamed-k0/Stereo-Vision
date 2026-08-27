@@ -83,7 +83,34 @@ def main():
 def read_calib(path): # -> dict
     with open(path, 'r') as file:
         text = file.read()
-    
+
+    # Define a function to get the matrices inside calib.txt (to allow reusability)
+    def get_matrix(cam):
+        # Search for a certain pattern recognized in the file
+        match = re.search(rf"{cam}=\[(.*?)\]", text)    # search for cam#=[any character with any number of times]
+        # Get the numerical values inside the matrix
+        num_values = re.findall(r"-?\d+\.?\d*", match.group(1))     # get the pattern of either + or - and can be decimal or not
+        # Put the values in a list to return it
+        nums = []
+        for num in num_values:
+            nums.append(float(num))
+        return nums
+
+    # Use the get_matrix function on the two cams (0 and 1)
+    cam0 = get_matrix("cam0")
+
+    cam1 = get_matrix("cam1")
+
+    # Define a function to Get the other values inside the file
+    def get_value(var_name, typecast=float):    # set the initial value of type cast to float
+        match = re.search(rf"{var_name}=(-?\d+\.?\d*)", text)   # looks for numbers
+        # Return the first value found
+        return typecast(match.group(1))
+
+    # Return the dictionary of the values
+    return {"fx": cam0[0], "fy": cam0[4], "cx0": cam0[2], "cx1": cam1[2], "cy": cam0[5], "baseline": get_value("baseline"), "doffs": get_value("doffs"), "ndisp": get_value("ndisp", typecast=int), "width": get_value("width", typecast=int), "height": get_value("height", typecast=int)}
+
+
 def save_ply(filename, points, colors):
 
     try:
