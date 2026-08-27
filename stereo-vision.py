@@ -13,21 +13,6 @@ def main():
     
 
     ...
-  
-    
-
-    
-
-    
-
-
-   
-
-    
-   
-
-
-   
 
     
 
@@ -135,19 +120,16 @@ def process_data(folder, output_folder, selected_pixel = (1000, 1000)):
 def save_ply(filename, points, colors):
 
     try:
+        # Create a variable that stacts the points and colors horizontally to satisfy writing vertex data
+        vertex_data = np.hstack([points, colors.astype(np.int32)]) 
         with open(filename, 'w') as file:
-            file.writelines(["ply\n", "format ascii 1.0\n",f"element vertex {len(points)}\n", "property float x\n", "property float y\n","property float z\n", "property uchar red\n", "property uchar green\n", "property uchar blue\n", 'end_header\n'])
-
-            # Combine same index of the two arrays in an array to iterate over it
-            for point, color in zip(points, colors):
-                X, Y, Z = point
-                R, G, B = color
-
-                file.write(f"{X} {Y} {Z} {int(R)} {int(G)} {int(B)}\n")
-
-            print("Polygon file created successfully.")
-    except Exception:
-        print("Couldn't create a file!")
+            file.writelines(["ply\n", "format ascii 1.0\n",f"element vertex {points.shape(0)}\n", "property float x\n", "property float y\n","property float z\n", "property uchar red\n", "property uchar green\n", "property uchar blue\n", 'end_header\n'])
+            # Save the array to the file
+            np.savetxt(file, vertex_data ,fmt = "%.4f %.4f %.4f %d %d %d")
+        
+        print("Polygon file created successfully.")
+    except Exception as error:
+        print(f"Couldn't create a file! {error}")
         
 
 
