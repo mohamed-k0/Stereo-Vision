@@ -110,7 +110,14 @@ def read_calib(path): # -> dict
     # Return the dictionary of the values
     return {"fx": cam0[0], "fy": cam0[4], "cx0": cam0[2], "cx1": cam1[2], "cy": cam0[5], "baseline": get_value("baseline"), "doffs": get_value("doffs"), "ndisp": get_value("ndisp", typecast=int), "width": get_value("width", typecast=int), "height": get_value("height", typecast=int)}
 
-
+def process_data(folder, output_folder, selected_pixel):
+    # Create a dictionary that stores the data in calib.txt
+    calib = read_calib(os.path.join(folder, "calib.txt"))
+    # Unpack the values that we will need
+    fx, fy, cx0, cy = calib["fx"], calib["fy"], calib["cx0"],calib["cy"]
+    baseline, doffs, ndisp = calib["baseline"], calib["doffs"], calib["ndisp"]
+    # Make the number of disparities a multiple of 16
+    ndisp = int(np.ceil(ndisp / 16) * 16) # get the nearest highest integer and then multiply by 16 
 def save_ply(filename, points, colors):
 
     try:
