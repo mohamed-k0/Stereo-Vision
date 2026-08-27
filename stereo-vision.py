@@ -118,6 +118,18 @@ def process_data(folder, output_folder, selected_pixel):
     baseline, doffs, ndisp = calib["baseline"], calib["doffs"], calib["ndisp"]
     # Make the number of disparities a multiple of 16
     ndisp = int(np.ceil(ndisp / 16) * 16) # get the nearest highest integer and then multiply by 16 
+
+    # Create a folder to output the data inside it
+    os.makedirs(output_folder, exist_ok=True)
+
+    # Read the two images as Grey Scale
+    left_img = cv.imread(os.path.join(folder, "im0.png"), cv.IMREAD_GRAYSCALE)
+
+    right_img = cv.imread(os.path.join(folder, "im1.png"), cv.IMREAD_GRAYSCALE)
+    # Check whether the images exist
+    if left_img is None or right_img is None:
+        raise FileNotFoundError("Couldn't load images")
+
 def save_ply(filename, points, colors):
 
     try:
