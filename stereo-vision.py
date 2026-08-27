@@ -4,69 +4,33 @@ import cv2 as cv
 import numpy as np
 
 
-FX = 6338.47
-FY = 6338.47
-BASELINE = 171.548
-DOFFS = 479.489
-CX0 = 1035.675
-CX1 = 1515.164
-CY= 960.073
 
-NUM_DISPARITES = 400
-BLOCK_SIZE = 19
 
 def main():
 
-    # Load left and right images in Grayscale
-    left_image = cv.imread("dataset/img1/im0.png", cv.IMREAD_GRAYSCALE)
-    right_image = cv.imread("dataset/img1/im1.png", cv.IMREAD_GRAYSCALE)
+   
+
+    
+
+    ...
+  
+    
+
+    
 
     
 
 
-    # Selected Pixel
-    x = 1000
-    y = 1000
    
 
-    # Define a Conversion matrix (Q) that fits the "Conditions of the Image"
-    Q = np.float32([
-    [-1, 0, 0, CX0],
-    [0, -1, 0, CY],
-    [0, 0, 0, FX],
-    [0, 0, 1/BASELINE, DOFFS/BASELINE]])
-
-    # Reproject points to 3D
-    points_3d = cv.reprojectImageTo3D(actual_disparity, Q)
-    # Create a Mask for "Valid" disparity values ( > 0 )
-    valid = actual_disparity > 0
-    # Use boolean indexing to filter invalid disparity
-    valid_points = points_3d[valid]
-
-
-    # Get the left image colored as RGB
-    left_img_clr = cv.imread("dataset/img1/im0.png")
-    left_img_clr = cv.cvtColor(left_img_clr, cv.COLOR_BGR2RGB)
-    # Use Boolean indexing to filter disparity
-    valid_colored = left_img_clr[valid]
-
-    # Save resulting point cloud as ".ply" file (text format storing 3D geometry)
-    save_ply(filename="point-cloud.ply",points=valid_points, colors=valid_colored)
+    
    
 
 
-    # Normalize disparity for visualization
-    visual_disparity = cv.normalize(disparity, None, 0, 255, cv.NORM_MINMAX)
-    # Convert to 8-bit unsigned integer
-    visual_disparity = visual_disparity.astype(np.uint8)
+   
 
-    # Save the Disparity Map
-    cv.imwrite("disparity_map.png", visual_disparity)
-    # Show the Disparity Map
-    cv.imshow("window",visual_disparity)
+    
 
-    cv.waitKey(0)
-    cv.destroyAllWindows()
 
 # Get the information of calib.txt inside a dictionary
 def read_calib(path): # -> dict
@@ -120,11 +84,10 @@ def process_data(folder, output_folder, selected_pixel = (1000, 1000)):
         raise FileNotFoundError("Couldn't load images")
 
     # Create Block Matching "object"
-    block_matching = cv.StereoBM_create(numDisparities=NUM_DISPARITES, blockSize=BLOCK_SIZE) 
+    block_matching = cv.StereoBM_create(numDisparities=ndisp, blockSize=19) 
 
     # Calculate disparity using compute method
     disparity = block_matching.compute(left_img, right_img)
-
 
     # Convert the 16-bit fixed-point representation value to the actual disparity
     actual_disparity = disparity.astype(np.float32) / 16
@@ -135,6 +98,39 @@ def process_data(folder, output_folder, selected_pixel = (1000, 1000)):
     depth = calc_depth(actual_disparity, fx, baseline, doffs, x, y)
     # print depth
     print(f"Depth of selected pixel: {depth:.2f} mm")
+
+    # define the reprojection (conversion) matrix
+    Q = np.float32([
+        [1, 0, 0, -cx0],
+        [0, -1, 0, cy],
+        [0, 0, 0, fx],
+        [0, 0, 1/baseline, doffs/baseline]])
+
+    # Reproject points to 3D
+    points_3d = cv.reprojectImageTo3D(actual_disparity, Q)
+
+    # Create a Mask for "Valid" disparity values ( > 0 )
+    valid = actual_disparity > 0   
+
+    # Use boolean indexing to filter invalid disparity
+    valid_points = points_3d[valid] 
+
+    # Get the left image colored as RGB
+    left_img_clr = cv.imread("dataset/img1/im0.png")
+    left_img_clr = cv.cvtColor(left_img_clr, cv.COLOR_BGR2RGB)
+    # Use Boolean indexing to filter disparity
+    valid_colored = left_img_clr[valid]
+
+    # Save resulting point cloud as ".ply" file (text format storing 3D geometry)
+    save_ply(filename="point-cloud.ply",points=valid_points, colors=valid_colored)
+
+    # Normalize disparity for visualization
+    visual_disparity = cv.normalize(disparity, None, 0, 255, cv.NORM_MINMAX)
+    # Convert to 8-bit unsigned integer
+    visual_disparity = visual_disparity.astype(np.uint8)
+    # Save the Disparity Map
+    cv.imwrite("disparity_map.png", visual_disparity)
+
 
 def save_ply(filename, points, colors):
 
