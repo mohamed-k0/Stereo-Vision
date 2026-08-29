@@ -26,7 +26,7 @@ def read_calib(path): # -> dict
     # Define a function to get the matrices inside calib.txt (to allow reusability)
     def get_matrix(cam):
         # Search for a certain pattern recognized in the file
-        match = re.search(rf"{cam}=\[(.*?)\]", text)    # search for cam#=[any character with any number of times]
+        match = re.search(rf"{cam}=\[(.*?)\]", text, re.DOTALL)    # search for cam#=[any character with any number of times]
         # Get the numerical values inside the matrix
         num_values = re.findall(r"-?\d+\.?\d*", match.group(1))     # get the pattern of either + or - and can be decimal or not
         # Put the values in a list to return it
@@ -102,20 +102,20 @@ def process_data(folder, output_folder, selected_pixel = (1000, 1000)):
     valid_points = points_3d[valid] 
 
     # Get the left image colored as RGB
-    left_img_clr = cv.imread("dataset/img1/im0.png")
+    left_img_clr = cv.imread(os.path.join(folder,"im0.png"))
     left_img_clr = cv.cvtColor(left_img_clr, cv.COLOR_BGR2RGB)
     # Use Boolean indexing to filter disparity
     valid_colored = left_img_clr[valid]
 
     # Save resulting point cloud as ".ply" file (text format storing 3D geometry)
-    save_ply(filename="point-cloud.ply",points=valid_points, colors=valid_colored)
+    save_ply(filename=os.path.join(output_folder, "point-cloud.ply"),points=valid_points, colors=valid_colored)
 
     # Normalize disparity for visualization
     visual_disparity = cv.normalize(disparity, None, 0, 255, cv.NORM_MINMAX)
     # Convert to 8-bit unsigned integer
     visual_disparity = visual_disparity.astype(np.uint8)
     # Save the Disparity Map
-    cv.imwrite("disparity_map.png", visual_disparity)
+    cv.imwrite(os.path.join(output_folder,"disparity_map.png"), visual_disparity)
 
 
 def save_ply(filename, points, colors):
@@ -124,7 +124,7 @@ def save_ply(filename, points, colors):
         # Create a variable that stacts the points and colors horizontally to satisfy writing vertex data
         vertex_data = np.hstack([points, colors.astype(np.int32)]) 
         with open(filename, 'w') as file:
-            file.writelines(["ply\n", "format ascii 1.0\n",f"element vertex {points.shape(0)}\n", "property float x\n", "property float y\n","property float z\n", "property uchar red\n", "property uchar green\n", "property uchar blue\n", 'end_header\n'])
+            file.writelines(["ply\n", "format ascii 1.0\n",f"element vertex {points.shape[0]}\n", "property float x\n", "property float y\n","property float z\n", "property uchar red\n", "property uchar green\n", "property uchar blue\n", 'end_header\n'])
             # Save the array to the file
             np.savetxt(file, vertex_data ,fmt = "%.4f %.4f %.4f %d %d %d")
         
