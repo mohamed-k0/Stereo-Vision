@@ -8,13 +8,14 @@ import numpy as np
 
 def main():
 
-   
-
-    
-
-    ...
-
-    
+   data_path = "dataset"
+   # Loop over the images' folders in sequence (Starting from 0)
+   for img in sorted(os.listdir(data_path)):
+    # Get the path of the image folder
+    img_path = os.path.join(data_path, img)
+    if os.path.isdir(img_path):
+        
+        process_data(img_path, os.path.join("outputs", img))
 
 
 # Get the information of calib.txt inside a dictionary
